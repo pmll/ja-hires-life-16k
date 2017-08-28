@@ -89,8 +89,10 @@ create udg-work
 16 base c!
 4E00 constant world-store
 decimal
-2 constant world-frame0-offset
-68 constant world-frame1-offset
+1 constant world-frame0-offset
+67 constant world-frame1-offset
+0 constant nowrap
+1 constant wrap
 
 0 variable current-frame-offset
 0 variable work-frame-offset
@@ -108,13 +110,13 @@ create show-world
     CD c, world-to-screen , FD c, E9 c,
 
 create copy-wrap-cells
-    26 c, 7E c, 16 c, 4E c, 3A c, current-frame-offset , 6F c,
-    5F c, 01 c, 40 c, 00 c, ED c, B0 c, 26 c, 4F c,
-    16 c, 7F c, 3A c, current-frame-offset , 6F c, 5F c, 01 c,
-    40 c, 00 c, ED c, B0 c, 26 c, 4F c, 54 c, 3A c,
-    current-frame-offset , 5F c, C6 c, 40 c, 6F c, 06 c, 30 c,
-    1A c, 77 c, 1D c, 2D c, 7E c, 12 c, 1C c, 2C c,
-    14 c, 24 c, 10 c, F4 c, C9 c,
+    26 c, 4F c, 54 c, 3A c, current-frame-offset , 5F c, C6 c,
+    40 c, 6F c, 06 c, 30 c, 1A c, 77 c, 1D c, 2D c,
+    7E c, 12 c, 1C c, 2C c, 14 c, 24 c, 10 c, F4 c,
+    26 c, 7E c, 16 c, 4E c, 3A c, current-frame-offset , 3D c,
+    6F c, 5F c, 01 c, 42 c, 00 c, ED c, B0 c, 26 c,
+    4F c, 16 c, 7F c, 3A c, current-frame-offset , 3D c, 6F c,
+    5F c, 01 c, 42 c, 00 c, ED c, B0 c, C9 c,
 
 create update-world
     3A c, wrap-world , FE c, 00 c, 28 c, 03 c, CD c,
@@ -130,11 +132,10 @@ create update-world
     current-frame-offset , 6F c, 3A c, work-frame-offset , 32 c, current-frame-offset ,
     7D c, 32 c, work-frame-offset , CD c, world-to-screen ,
     FD c, E9 c,
-
 decimal
 
 : clear-world-row ( start addr --)
-    dup [ world-frame1-offset 64 + ] literal + swap do
+    dup [ world-frame1-offset 65 + ] literal + swap do
         0 i ! 
     2 +loop
 ;
@@ -175,3 +176,80 @@ decimal
     life
 ;
 
+: prep-life ( address of pre-prepared world)
+    cls 10 9 at ." Please wait..."
+    create-cell-udgs
+    clear-world
+    begin
+        dup c@          ( x co-ord or terminator value)
+        swap 1+ dup c@  ( y co-ord)
+        swap 1+
+        rot dup 254 <
+    while
+        64 mod
+        rot 48 mod 47 - negate 256 *
+        +
+        [ world-store 256 + world-frame0-offset + ] literal +
+        1 swap c!
+    repeat
+    1 and wrap-world !
+    drop
+    drop
+    world-frame0-offset current-frame-offset !
+    world-frame1-offset work-frame-offset !
+    show-world call
+    life
+;
+
+
+
+: demo-comment ( pre-prepared demo worlds from hereon) ;
+
+: make-glider ( x, y --)
+    over c, dup c,
+    over 1+ c, dup c,
+    over 2+ c, dup c,
+    over 2+ c, dup 1+ c,
+    swap 1+ c, 2+ c,
+;
+
+: make-gliders
+    61 10 do
+        41 10 do
+            j i make-glider
+        10 +loop
+    10 +loop
+;
+
+create gliders
+    make-gliders
+    -1 c,
+
+create osc
+    1 c, 24 c, 2 c, 24 c, 3 c, 24 c,
+    8 c, 24 c, 9 c, 24 c, 9 c, 25 c, 10 c, 24 c, 10 c, 25 c, 11 c, 25 c,
+    16 c, 26 c, 17 c, 26 c, 16 c, 25 c, 19 c, 24 c, 19 c, 23 c, 18 c, 23 c,
+
+    24 c, 22 c, 24 c, 21 c, 24 c, 20 c, 24 c, 26 c, 24 c, 27 c, 24 c, 28 c,
+    29 c, 22 c, 29 c, 21 c, 29 c, 20 c, 29 c, 26 c, 29 c, 27 c, 29 c, 28 c,
+    31 c, 22 c, 31 c, 21 c, 31 c, 20 c, 31 c, 26 c, 31 c, 27 c, 31 c, 28 c,
+    36 c, 22 c, 36 c, 21 c, 36 c, 20 c, 36 c, 26 c, 36 c, 27 c, 36 c, 28 c,
+    26 c, 30 c, 27 c, 30 c, 28 c, 30 c, 32 c, 30 c, 33 c, 30 c, 34 c, 30 c,
+    26 c, 25 c, 27 c, 25 c, 28 c, 25 c, 32 c, 25 c, 33 c, 25 c, 34 c, 25 c,
+    26 c, 23 c, 27 c, 23 c, 28 c, 23 c, 32 c, 23 c, 33 c, 23 c, 34 c, 23 c,
+    26 c, 18 c, 27 c, 18 c, 28 c, 18 c, 32 c, 18 c, 33 c, 18 c, 34 c, 18 c,
+
+    44 c, 24 c, 45 c, 24 c, 46 c, 25 c, 46 c, 23 c, 47 c, 24 c, 48 c, 24 c,
+    49 c, 24 c, 50 c, 24 c, 51 c, 25 c, 51 c, 23 c, 52 c, 24 c, 53 c, 24 c,
+    -1 c,
+
+create gosper
+    2 c, 40 c, 3 c, 40 c, 2 c, 39 c, 3 c, 39 c,
+    12 c, 40 c, 12 c, 39 c, 12 c, 38 c, 13 c, 41 c, 13 c, 37 c,
+    14 c, 42 c, 15 c, 42 c, 14 c, 36 c, 15 c, 36 c, 16 c, 39 c,
+    17 c, 41 c, 17 c, 37 c, 18 c, 40 c, 18 c, 39 c, 18 c, 38 c,
+    19 c, 39 c, 22 c, 42 c, 22 c, 41 c, 22 c, 40 c,
+    23 c, 42 c, 23 c, 41 c, 23 c, 40 c, 24 c, 43 c, 24 c, 39 c,
+    26 c, 43 c, 26 c, 44 c, 26 c, 39 c, 26 c, 38 c,
+    36 c, 42 c, 36 c, 41 c, 37 c, 42 c, 37 c, 41 c,
+    -2 c,
